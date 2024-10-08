@@ -10,7 +10,7 @@ class MainWindow(QWidget):
         self.setWindowTitle("PyaiiTTS Installer")
         self.setFixedSize(self.minimumSize())
         self.platName = "win" if sys.platform == "win32" else sys.platform
-        self.def_loc = f"/home/{USER}/.local/share" if sys.platform != "win32" else f"C:/Users/{user}/AppData/Local"
+        self.def_loc = f"/home/{USER}/.local/share" if sys.platform != "win32" else f"C:/Users/{USER}/AppData/Local"
         self.dir = self.def_loc
         
         self.choosedir = QPushButton("Choose Program Directory ("+self.dir+")")
