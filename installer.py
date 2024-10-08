@@ -1,5 +1,5 @@
 import sys, os, requests, shutil, stat
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QFileDialog, QErrorMessage, QMessageBox
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QErrorMessage, QMessageBox, QComboBox
 from PyQt6.QtCore import Qt
 
 USER = os.getlogin()
@@ -10,11 +10,17 @@ class MainWindow(QWidget):
         self.setWindowTitle("PyaiiTTS Installer")
         self.setFixedSize(self.minimumSize())
         self.platName = "win" if sys.platform == "win32" else sys.platform
-        self.def_loc = f"/home/{USER}/.local/share" if sys.platform != "win32" else f"C:/Users/{USER}/AppData/Local/Programs"
+        self.def_loc = f"/home/{USER}/.local/share" if sys.platform != "win32" else f"C:/Users/{user}/AppData/Local"
         self.dir = self.def_loc
         
         self.choosedir = QPushButton("Choose Program Directory ("+self.dir+")")
         self.choosedir.clicked.connect(self.set_dir)
+        
+        self.choosever = QComboBox()
+        self.choosever.activated.connect(self.change_ver)
+        
+        refresh = QPushButton("⟲")
+        refresh.clicked.connect(self.re_vers)
         
         install = QPushButton("Install PyaiiTTS")
         install.clicked.connect(self.install)
@@ -25,8 +31,13 @@ class MainWindow(QWidget):
         uninstall = QPushButton("Uninstall PyaiiTTS")
         uninstall.clicked.connect(self.uninstall)
         
+        ver_layout = QHBoxLayout()
+        ver_layout.addWidget(refresh)
+        ver_layout.addWidget(self.choosever,1)
+        
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(ver_layout)
         layout.addWidget(self.choosedir)
         layout.addWidget(install)
         layout.addWidget(update)
@@ -36,12 +47,45 @@ class MainWindow(QWidget):
         
         self.em = QErrorMessage(self)
         self.em.setWindowTitle("PyaiiTTS Installer | Error")
+        
+        self.vers = []
+        try:
+            self.vers = self.get_vers()
+        except Exception as e:
+            self.error(e)
+        self.choosever.addItems(self.vers)
+        self.choosever.setCurrentIndex(0)
+        self.change_ver()
+    
+    def re_vers(self):
+        try:
+            self.choosever.clear()
+            self.vers = self.get_vers()
+            self.choosever.addItems(self.vers)
+            self.choosever.setCurrentIndex(0)
+        except Exception as e:
+            self.error(e)
+    
+    def get_vers(self):
+        try:
+            api_url = f'https://api.github.com/repos/DatBogie/PyaiiTTS/releases'
+            
+            response = requests.get(api_url)
+            response.raise_for_status()
+            
+            releases = response.json()
+            return [release['tag_name'] for release in releases]
+        except Exception as e:
+            self.error(e)
     
     def error(self,e:Exception|str):
         if type(e) != str:
             self.em.showMessage(str(e))
         else:
             QMessageBox.critical(self,"PyaiiTTS Installer | Error",e,QMessageBox.StandardButton.Ok)
+    
+    def change_ver(self):
+        self.ver = self.choosever.currentText()
     
     def update(self):
         try:
@@ -71,6 +115,11 @@ class MainWindow(QWidget):
         self.choosedir.setText("Choose Program Directory ("+self.dir+")")
     
     def install(self):
+        if os.path.exists(self.dir+"/PyaiiTTS"):
+            for f in os.scandir(self.dir+"/PyaiiTTS"):
+                if f.is_file() and f.name.find(self.platName) != -1:
+                    self.error("Error: PyaiiTTS has already been installed here! Please update instead.")
+                    return
         try:
             exec_file,exec_name = self.dl_exec()
             if not os.path.exists(self.dir+"/PyaiiTTS"):
@@ -128,7 +177,7 @@ class MainWindow(QWidget):
             self.error(e)
         
     def dl_exec(self) -> tuple[str,str]:
-        api_url = f"https://api.github.com/repos/DatBogie/PyaiiTTS/releases/latest"
+        api_url = f"https://api.github.com/repos/DatBogie/PyaiiTTS/releases/tags/{self.ver}"
         response = requests.get(api_url)
         
         if response.status_code == 200:
@@ -136,7 +185,7 @@ class MainWindow(QWidget):
             asset_url = None
             asset_name = ""
             for asset in release_info["assets"]:
-                if (asset["name"].find("win") != -1 and sys.platform == "win32") or (asset["name"].find(sys.platform) != -1 and sys.platform != "win32"):
+                if asset["name"].find(self.platName) != -1 and asset["name"].find("installer") == -1: # choose which to dl | right platform and not installer
                     asset_url = asset["url"]
                     asset_name = asset["name"]
                     break
