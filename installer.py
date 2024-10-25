@@ -1,5 +1,5 @@
-import sys, os, requests, shutil, stat
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QErrorMessage, QMessageBox, QComboBox
+import sys, os, requests, shutil
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QErrorMessage, QMessageBox, QComboBox, QCheckBox
 from PyQt6.QtCore import Qt
 
 USER = os.getlogin()
@@ -18,6 +18,10 @@ class MainWindow(QWidget):
         
         self.choosever = QComboBox()
         self.choosever.activated.connect(self.change_ver)
+
+        self.dlassets = QCheckBox("Install Assets")
+        self.dlassets.setToolTip("Install image dependancies required for >=v1.3-pre1")
+        self.dlassets.clicked.connect(self.toggle_dl_assets)
         
         refresh = QPushButton("⟲")
         refresh.clicked.connect(self.re_vers)
@@ -39,6 +43,7 @@ class MainWindow(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addLayout(ver_layout)
         layout.addWidget(self.choosedir)
+        layout.addWidget(self.dlassets)
         layout.addWidget(install)
         layout.addWidget(update)
         layout.addWidget(uninstall)
@@ -57,6 +62,9 @@ class MainWindow(QWidget):
         self.choosever.setCurrentIndex(0)
         self.change_ver()
     
+    def toggle_dl_assets(self):
+        self.DlAssets = not self.DlAssets
+   
     def re_vers(self):
         try:
             self.choosever.clear()
@@ -86,6 +94,20 @@ class MainWindow(QWidget):
     
     def change_ver(self):
         self.ver = self.choosever.currentText()
+        num = self.ver[1:]
+        if "-" in num:
+            num = num[:num.find("-")]
+        if "." in num:
+            num = num[:num.find(".")] + num[num.find(".")+1:]
+        while "." in num:
+            num = num[:num.find(".")]
+        num = int(num)
+        print(num)
+        if num >= 13:
+            self.DlAssets = True
+        else:
+            self.DlAssets = False
+        self.dlassets.setChecked(self.DlAssets)
     
     def update(self):
         try:
@@ -103,7 +125,8 @@ class MainWindow(QWidget):
                     os.remove(x.path)
             if os.path.exists(p+"assets"):
                 shutil.rmtree(p+"assets")
-            self.dl_assets()
+            if self.DlAssets:
+                self.dl_assets()
             QMessageBox.information(self,"PyaiiTTS Installer | Update","Update successfully installed!",QMessageBox.StandardButton.Ok)
         except Exception as e:
             self.error(e)
@@ -130,7 +153,8 @@ class MainWindow(QWidget):
                 st = os.stat(self.dir+"/PyaiiTTS/"+exec_name)
                 os.chmod(self.dir+"/PyaiiTTS/"+exec_name, st.st_mode | 0o111)
             os.mkdir(self.dir+"/PyaiiTTS/output")
-            self.dl_assets()
+            if self.DlAssets:
+                self.dl_assets()
             QMessageBox.information(self,"PyaiiTTS Installer | Install","PyaiiTTS successfully installed!",QMessageBox.StandardButton.Ok)
         except Exception as e:
             self.error(e)
@@ -207,6 +231,7 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyle("fusion")
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
