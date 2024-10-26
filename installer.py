@@ -1,8 +1,14 @@
-import sys, os, requests, shutil
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QErrorMessage, QMessageBox, QComboBox, QCheckBox
+import sys, os, requests, shutil, subprocess
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QErrorMessage, QMessageBox, QComboBox, QCheckBox, QLineEdit, QLabel
 from PyQt6.QtCore import Qt
 
 USER = os.getlogin()
+
+def startfile(path):
+    if sys.platform == "win32":
+        os.startfile(path)
+    else:
+        subprocess.Popen(path)
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -13,6 +19,10 @@ class MainWindow(QWidget):
         self.def_loc = f"/home/{USER}/.local/share" if sys.platform != "win32" else f"C:/Users/{USER}/AppData/Local/Programs"
         self.dir = self.def_loc
         
+        resetdir = QPushButton("⟲")
+        resetdir.setToolTip("Reset the install directory to:\n"+self.def_loc)
+        resetdir.clicked.connect(self.re_dir)
+        
         self.choosedir = QPushButton("Choose Program Directory ("+self.dir+")")
         self.choosedir.clicked.connect(self.set_dir)
         
@@ -20,10 +30,28 @@ class MainWindow(QWidget):
         self.choosever.activated.connect(self.change_ver)
 
         self.dlassets = QCheckBox("Install Assets")
-        self.dlassets.setToolTip("Install image dependancies required for >=v1.3-pre1")
+        self.dlassets.setToolTip("Install assets required by >=v1.3-pre1")
         self.dlassets.clicked.connect(self.toggle_dl_assets)
         
+        self.odone = QCheckBox("Open When Done")
+        self.odone.setToolTip("Automatically open PyaiiTTS after it is finished installing")
+        
+        keylbl = QLabel("API Key:")
+        
+        self.key = QLineEdit()
+        self.key.setPlaceholderText("Paste ElevenLabs API key here...")
+        
+        key_layout = QHBoxLayout()
+        key_layout.addWidget(keylbl)
+        key_layout.addWidget(self.key,1)
+        
+        check_layout = QHBoxLayout()
+        check_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        check_layout.addWidget(self.dlassets)
+        check_layout.addWidget(self.odone)
+        
         refresh = QPushButton("⟲")
+        refresh.setToolTip("Refresh version list")
         refresh.clicked.connect(self.re_vers)
         
         install = QPushButton("Install PyaiiTTS")
@@ -35,6 +63,10 @@ class MainWindow(QWidget):
         uninstall = QPushButton("Uninstall PyaiiTTS")
         uninstall.clicked.connect(self.uninstall)
         
+        dir_layout = QHBoxLayout()
+        dir_layout.addWidget(resetdir)
+        dir_layout.addWidget(self.choosedir,1)
+        
         ver_layout = QHBoxLayout()
         ver_layout.addWidget(refresh)
         ver_layout.addWidget(self.choosever,1)
@@ -42,8 +74,9 @@ class MainWindow(QWidget):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addLayout(ver_layout)
-        layout.addWidget(self.choosedir)
-        layout.addWidget(self.dlassets)
+        layout.addLayout(dir_layout)
+        layout.addLayout(key_layout)
+        layout.addLayout(check_layout)
         layout.addWidget(install)
         layout.addWidget(update)
         layout.addWidget(uninstall)
@@ -65,6 +98,10 @@ class MainWindow(QWidget):
     def toggle_dl_assets(self):
         self.DlAssets = not self.DlAssets
    
+    def re_dir(self):
+        self.dir = self.def_loc
+        self.choosedir.setText("Choose Program Directory ("+self.dir+")")
+    
     def re_vers(self):
         try:
             self.choosever.clear()
@@ -94,19 +131,24 @@ class MainWindow(QWidget):
     
     def change_ver(self):
         self.ver = self.choosever.currentText()
-        num = self.ver[1:]
-        if "-" in num:
-            num = num[:num.find("-")]
-        if "." in num:
-            num = num[:num.find(".")] + num[num.find(".")+1:]
-        while "." in num:
-            num = num[:num.find(".")]
-        num = int(num)
-        print(num)
-        if num >= 13:
+        ver = self.choosever.count()-self.choosever.currentIndex()
+        mver = self.ver[1:]
+        if "-" in mver:
+            mver = mver[:mver.find("-")]
+        if "." in mver:
+            mver = mver[:mver.find(".")] + mver[mver.find(".")+1:]
+        mver = float(mver)
+        print(f"v{mver}, #{ver}")
+        if mver >= 13.0:
             self.DlAssets = True
         else:
             self.DlAssets = False
+        if ver <= 7:
+            self.odone.setChecked(False)
+            self.odone.setCheckable(False)
+        else:
+            self.odone.setChecked(True)
+            self.odone.setCheckable(True)
         self.dlassets.setChecked(self.DlAssets)
     
     def update(self):
@@ -128,6 +170,11 @@ class MainWindow(QWidget):
             if self.DlAssets:
                 self.dl_assets()
             QMessageBox.information(self,"PyaiiTTS Installer | Update","Update successfully installed!",QMessageBox.StandardButton.Ok)
+            if self.key.text() != "" and len(self.key.text()) > 50: # Probably valid.
+                with open(self.dir+"/PyaiiTTS/"+"key.txt","w") as f:
+                    f.write(self.key.text())
+            if self.odone.isChecked():
+                startfile(self.dir+"/PyaiiTTS/"+exec_name)
         except Exception as e:
             self.error(e)
     
@@ -156,6 +203,11 @@ class MainWindow(QWidget):
             if self.DlAssets:
                 self.dl_assets()
             QMessageBox.information(self,"PyaiiTTS Installer | Install","PyaiiTTS successfully installed!",QMessageBox.StandardButton.Ok)
+            if self.key.text() != "" and len(self.key.text()) > 20: # Probably valid.
+                with open(self.dir+"/PyaiiTTS/"+"key.txt","w") as f:
+                    f.write(self.key.text())
+            if self.odone.isChecked():
+                startfile(self.dir+"/PyaiiTTS/"+exec_name)
         except Exception as e:
             self.error(e)
     
@@ -165,7 +217,7 @@ class MainWindow(QWidget):
             if x != QMessageBox.StandardButton.Yes: return
             p = self.def_loc+"/PyaiiTTS"
             if not os.path.exists(p): p = self.dir+"/PyaiiTTS"
-            if not os.path.exists(p): return
+            if not os.path.exists(p): QMessageBox.critical(self,"PyaiiTTS Installer | Uninstall",f"PyaiiTTS was not found the specified directory:\n{self.dir}/PyaiiTTS",QMessageBox.StandardButton.Abort); return
             shutil.rmtree(self.dir+"/PyaiiTTS")
             QMessageBox.information(self,"PyaiiTTS Installer | Uninstall","PyaiiTTS successfully uninstalled!",QMessageBox.StandardButton.Ok)
         except Exception as e:
