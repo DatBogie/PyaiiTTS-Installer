@@ -6,6 +6,6 @@ A small app designed to install/manage [PyaiiTTS](https://github.com/DatBogie/Py
 - Automatically inputs the given Elevenlabs key; no more instant crashes on old versions!
 <br>&nbsp;
 ### Screenshots:
-<sup>_(Hover for a caption.)_</sup>
+<sup>_(Hover image for caption.)_</sup>
 
 <span title="PyaiiTTS Installer v1.3 running on macOS Ventura">![PyaiiTTS Installer v1.3 on macOS](./.web-assets/macOS.png)</span>
