@@ -1,4 +1,4 @@
-# PyaiiTTS-Installer
+# PyaiiTTS-Installer <img src="https://raw.githubusercontent.com/DatBogie/PyaiiTTS/refs/heads/main/.web-assets/PyaiiTTS-Logo.png" height="25px">
 A small app designed to install/manage [PyaiiTTS](https://github.com/DatBogie/PyaiiTTS).
 - Easily install, update, and uninstall all* versions of PyaiiTTS.
 - Crossplatform between Linux, Windows, and macOS**.
