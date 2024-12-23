@@ -8,3 +8,4 @@ A small app designed to install/manage [PyaiiTTS](https://github.com/DatBogie/Py
 ### Screenshots:
 
 ![PyaiiTTS Installer v1.3 on macOS](./.web-assets/macOS.png)
+(PyaiiTTS Installer v1.3 running on macOS Ventura)
