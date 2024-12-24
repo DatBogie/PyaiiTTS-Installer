@@ -21,10 +21,14 @@ class MainWindow(QWidget):
         self.setFixedSize(self.minimumSize())
         self.platName = "win" if sys.platform == "win32" else sys.platform
         if sys.platform == "darwin": self.platName = "mac"
-        self.def_loc = f"/home/{USER}/.local/share" # Linux ~/.local/share
-        if sys.platform != "win32" or sys.platform == "darwin":
-            # Windows C:\Users\<user>\AppData\Local\Programs | macOS ~/Applications
-            self.def_loc = f"C:/Users/{USER}/AppData/Local/Programs" if sys.platform == "win32" else f"/Users/{USER}/Applications"
+        
+        if sys.platform == "linux":
+            self.def_loc = f"/home/{USER}/.local/share" # Linux
+        elif sys.platform == "win32":
+            self.def_loc = f"C:/Users/{USER}/AppData/Local/Programs" # Windows
+        else:
+            self.def_loc = f"/Users/{USER}/Applications" # macOS
+        
         self.dir = self.def_loc
         
         resetdir = QPushButton("⟲")
