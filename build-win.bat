@@ -1,7 +1,7 @@
 @echo off
 
 REM Create venv
-python3 -m venv .\.venv
+python -m venv .\.venv
 
 REM Source venv
 call .\.venv\Scripts\activate
