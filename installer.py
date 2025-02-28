@@ -2,11 +2,11 @@ import sys, os, requests, shutil, subprocess, zipfile
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QErrorMessage, QMessageBox, QComboBox, QCheckBox, QLineEdit, QLabel
 from PyQt6.QtCore import Qt
 
-USER = os.getlogin()
-print(f"Logged in as: {USER}")
-if USER == "root" and sys.platform != "win32":
-    USER  = os.environ.get("USER")
-    print(f"Corrected; Logged in as: {USER}")
+USER = os.path.expanduser("~/") # os.getlogin()
+# print(f"Logged in as: {USER}")
+# if USER == "root" and sys.platform != "win32":
+#     USER  = os.environ.get("USER")
+#     print(f"Corrected; Logged in as: {USER}")
 
 def startfile(path):
     if sys.platform == "win32":
@@ -23,11 +23,11 @@ class MainWindow(QWidget):
         if sys.platform == "darwin": self.platName = "mac"
         
         if sys.platform == "linux":
-            self.def_loc = f"/home/{USER}/.local/share" # Linux
+            self.def_loc = f"{USER}.local/share" # f"/home/{USER}/.local/share" # Linux
         elif sys.platform == "win32":
-            self.def_loc = f"C:/Users/{USER}/AppData/Local/Programs" # Windows
+            self.def_loc = f"{USER}AppData/Local/Programs" # f"C:/Users/{USER}/AppData/Local/Programs" # Windows
         else:
-            self.def_loc = f"/Users/{USER}/Applications" # macOS
+            self.def_loc = f"{USER}Applications" # f"/Users/{USER}/Applications" # macOS
         
         self.dir = self.def_loc
         
