@@ -7,6 +7,8 @@ USER = os.path.expanduser("~/") # os.getlogin()
 # if USER == "root" and sys.platform != "win32":
 #     USER  = os.environ.get("USER")
 #     print(f"Corrected; Logged in as: {USER}")
+if sys.platform == "win32":
+    USER = USER.replace("\\","/")
 
 def startfile(path):
     if sys.platform == "win32":
