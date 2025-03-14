@@ -4,8 +4,8 @@ A small app designed to install/manage [PyaiiTTS](https://github.com/DatBogie/Py
 - Crossplatform between Linux, Windows, and macOS*.
 - Automatically installs all needed assets.
 - Automatically inputs the given Elevenlabs key; no more instant crashes on old versions!
-<br>
-<sup>*Some versions are not available on macOS.</sup>
+
+<br><sup>*Some versions are not available on macOS.</sup>
 <br>&nbsp;
 ### Screenshots:
 <sup>_(Hover an image for a caption.)_</sup>
